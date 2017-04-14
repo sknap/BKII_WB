@@ -1,3 +1,5 @@
+#include <SparkFunTMP102.h>
+
 #include <RTClib.h>
 
 
@@ -26,6 +28,7 @@ int thermo1=A1;
 int thermo2=A2;
 int thermo3=A3;
 
+int tmp102Address = 0x48;
 
 RTC_DS1307 RTC; // define the Real Time Clock object
 
@@ -96,9 +99,9 @@ void setup(void)
   }
   
 
-  logfile.println("millis,voltage0,voltage1,voltage2,voltage3");    
+  logfile.println("millis,voltage0,voltage1,voltage2,voltage3,temp");    
 #if ECHO_TO_SERIAL
-  Serial.println("millis,voltage0,voltage1,voltage2,voltage3");
+  Serial.println("millis,voltage0,voltage1,voltage2,voltage3,temp");
 #endif //ECHO_TO_SERIAL
  
   // If you want to set the aref to something other than 5v
@@ -161,7 +164,13 @@ void loop(void)
   Serial.print(", ");    
   Serial.print(volt3);
 #endif //ECHO_TO_SERIAL
-
+  float celsius = getTemperature();
+  delay(20);
+  Serial.print(", ");
+  Serial.print(celsius);
+  logfile.print(", ");    
+  logfile.print(celsius);
+  
   logfile.println();
 #if ECHO_TO_SERIAL
   Serial.println();
@@ -173,4 +182,15 @@ void loop(void)
  logfile.flush();
 }
 
+float getTemperature(){
+  Wire.requestFrom(tmp102Address,2); 
+
+  byte MSB = Wire.read();
+  byte LSB = Wire.read();
+
+  int TemperatureSum = ((MSB << 8) | LSB) >> 4; 
+
+  float celsius = TemperatureSum*0.0625;
+  return celsius;
+}
 
